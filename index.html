@@ -4,7 +4,7 @@
 <main><div class="note"><b>Research demonstration:</b> Room and storey details load from a JSON extraction of the Haus IFC model. All equipment, replacement events and documents are <b>simulated test records</b>. The IFC extraction is real; maintenance records remain simulated. This is a static demonstration. No live database or real maintenance system is claimed.</div><br>
 <div class="grid"><section><div class="card"><h2>1. Scan / look up a permanent room ID</h2><p class="muted">The final QR code should contain this page URL with the room parameter:</p><p class="id" id="roomUrl">Loading page URL...</p><button class="gray" onclick="copyRoomUrl()">Copy URL for LightBurn</button><p class="muted" id="copyStatus"></p><input id="lookup" value="HOUSE-ROOM-BAD-001" aria-label="Enter room ID"><button onclick="lookup()">Resolve identifier</button><p id="lookupResult" class="muted"></p></div><div class="card"><h2>2. The stable IFC location</h2><div class="floor"><div><strong>HAUS</strong><br>GROUND FLOOR<br><b>BAD</b> · ROOM 3</div></div><div class="kv"><strong>IfcSpace name</strong>3 - Bad</div><div class="kv"><strong>IFC GlobalId (real model)</strong><span class="id">0e_hbkIQ5DMQlIJ$2V3j_m</span></div><div class="kv"><strong>Model</strong>AC20-FZK-Haus.ifc · IFC4</div><div class="kv"><strong>Persistent room ID</strong>HOUSE-ROOM-BAD-001</div><p class="muted">The room ID is independent of equipment IDs, so it survives replacement.</p></div></section>
 <section><div class="card"><h2>3. Current installed equipment</h2><span class="tag" id="status">CURRENT LINK VALID</span><p><span class="muted">Location:</span> Bathroom / Bad</p><div class="metric" id="equipment">VENT-001</div><p id="product">Simulated ventilation unit, version A</p><div class="kv"><strong>Installation / linked period</strong><span id="period">2026-01-15 - current</span></div><div class="kv"><strong>Document</strong><span id="doc">Demo technical manual A (mock record)</span></div><p><button onclick="replace()">Simulate replacement</button><button class="red" onclick="breakLink()">Inject invalid link</button><button class="gray" onclick="resetDemo()">Reset</button></p></div><div class="card"><h2>4. History and integrity audit</h2><div id="audit" class="ok"><b>PASS</b> · Exactly one current equipment link</div><h3>Maintenance events</h3><div class="timeline" id="timeline"></div></div></section></div>
-<section class="card" id="real3d"><h2>3D building model</h2><p class="muted">The original <a href="AC20-FZK-Haus.ifc" download>AC20-FZK-Haus.ifc</a> and verified room data are included in this project. The 3D viewer loads a <b>real mesh converted from that IFC file</b>, not an approximate house drawing.</p><div id="viewer3d" style="height:440px;background:#eaf1f7;border:1px solid #c8d8e5;border-radius:10px;position:relative;overflow:hidden"><div id="viewerMessage" style="padding:24px">Checking for converted IFC geometry…</div></div><p id="meshStatus" class="muted">The original IFC is available above.</p><p class="muted">Mouse: drag to rotate · scroll to zoom · right-drag to pan. If the .glb file is not uploaded yet, the original IFC and room metadata remain available.</p></section>
+<section class="card" id="real3d"><h2>3D building model</h2><p class="muted">The original <a href="AC20-FZK-Haus.ifc" download>AC20-FZK-Haus.ifc</a> and verified room data are included in this project. The 3D viewer loads a <b>real mesh converted from that IFC file</b>, not an approximate house drawing.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px"><button type="button" id="resetCamera" class="gray">Reset view</button><button type="button" id="isolateRoom">Isolate selected room</button><button type="button" id="showAll" class="gray">Show entire building</button><button type="button" id="toggleEdges" class="gray">Hide edges</button></div><p class="muted" id="objectInfo">Click a building element to see its IFC class and GlobalId. Choose a room below to highlight it.</p><div id="viewer3d" style="height:440px;background:#eaf1f7;border:1px solid #c8d8e5;border-radius:10px;position:relative;overflow:hidden"><div id="viewerMessage" style="padding:24px">Checking for converted IFC geometry…</div></div><p id="meshStatus" class="muted">The original IFC is available above.</p><p class="muted">Mouse: drag to rotate · scroll to zoom · right-drag to pan. If the .glb file is not uploaded yet, the original IFC and room metadata remain available.</p></section>
 <div class="card" id="ifcExplorer"><h2>Real IFC model data</h2><p class="muted">These room records were extracted from AC20-FZK-Haus.ifc. They are loaded from <code>ifc-data.json</code>, not typed into the HTML. Equipment remains simulated.</p><p><label for="spaceSelect"><b>Select a room from the IFC model</b></label></p><select id="spaceSelect" style="width:100%;padding:10px;border:1px solid #b5c8d8;border-radius:7px" aria-label="IFC room"></select><div id="spaceDetail" aria-live="polite"></div><p id="ifcLoad" class="muted">Loading model extraction...</p><details><summary>Model provenance</summary><p id="provenance" class="id"></p><p class="muted">The extracted JSON was produced from the actual IFC file. Model geometry is not displayed here, and the page does not parse an IFC file at scan time.</p></details></div>
 <div class="card"><h2>Research contribution to validate</h2><p><b>Hypothesis:</b> A persistent location identifier combined with time-bounded equipment assignments and integrity rules can preserve traceable maintenance history when an asset is replaced.</p><p><b>Measured outcomes:</b> correct resolution, preservation of retired history, detection of missing/contradictory assignments, and behavior after IFC re-export.</p><p class="muted">Prototype computes referential-integrity checks over in-memory records; replacement preserves historical events. Room and storey values now load from an extraction of the supplied IFC file. Direct IFC parsing in the browser, actual maintenance records and systematic test-set evaluation remain future thesis work.</p></div></main>
 <script>
@@ -41,47 +41,67 @@ async function copyRoomUrl(){const value=roomUrl();try{await navigator.clipboard
 (function start(){document.getElementById('roomUrl').textContent=roomUrl();const requested=new URLSearchParams(window.location.search).get('room');if(requested!==null){document.getElementById('lookup').value=requested}render();lookup();loadIfc()})();
 </script>
 <script type="module">
-const status=document.getElementById('meshStatus');
-const msg=document.getElementById('viewerMessage');
-// An upload of the model.glb generated by convert_ifc_to_glb.py is required.
+const status=document.getElementById('meshStatus'), msg=document.getElementById('viewerMessage');
 try {
   const res=await fetch('./model.glb',{method:'HEAD',cache:'no-store'});
-  if (!res.ok || !/model\/gltf-binary|application\/octet-stream/i.test(res.headers.get('content-type')||'application/octet-stream')) {
-    throw new Error('model.glb is not published yet. Run the included conversion script on your PC and upload the result.');
-  }
-  const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js');
-  const [{GLTFLoader},{OrbitControls}]=await Promise.all([
-    import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
-    import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js')
-  ]);
-  const container=document.getElementById('viewer3d');
-  msg.remove();
-  const scene=new THREE.Scene();scene.background=new THREE.Color('#eaf1f7');
-  const camera=new THREE.PerspectiveCamera(48,1,0.01,5000);camera.position.set(20,15,20);
-  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
-  container.appendChild(renderer.domElement);
-  scene.add(new THREE.HemisphereLight(0xffffff,0x728aa2,2.3));
-  const sunlight=new THREE.DirectionalLight(0xffffff,2.4);sunlight.position.set(20,40,30);scene.add(sunlight);
+  if(!res.ok) throw new Error('model.glb is missing. Upload your converted model.glb to the repository root.');
+  const THREE=await import('three');
+  const [{GLTFLoader},{OrbitControls}]=await Promise.all([import('three/addons/loaders/GLTFLoader.js'),import('three/addons/controls/OrbitControls.js')]);
+  const container=document.getElementById('viewer3d');msg.remove();
+  const scene=new THREE.Scene(); scene.background=new THREE.Color('#eaf2f8');
+  const camera=new THREE.PerspectiveCamera(46,1,0.01,3000);
+  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
+  container.append(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xffffff,0xbac9d9,3.0));
+  const a=new THREE.DirectionalLight(0xffffff,3.5);a.position.set(15,30,25);scene.add(a);
+  const b=new THREE.DirectionalLight(0xcbe5ff,2);b.position.set(-20,8,-20);scene.add(b);
   const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;
-  let root;
-  const gltf=await new GLTFLoader().loadAsync('./model.glb');root=gltf.scene;scene.add(root);
-  const bounds=new THREE.Box3().setFromObject(root),size=new THREE.Vector3(),center=new THREE.Vector3();
-  bounds.getSize(size);bounds.getCenter(center);
-  if (!Number.isFinite(size.length()) || size.length()<0.01) throw new Error('Converted mesh has invalid geometry.');
-  controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(size.length()*.7,size.length()*.55,size.length()*.7));camera.near=Math.max(.001,size.length()/10000);camera.far=Math.max(100,size.length()*30);camera.updateProjectionMatrix();controls.update();
-  status.textContent=`Real IFC mesh loaded · ${gltf.scene.children.length} root nodes · bounding size ${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} m`;
-  // The exported model retains IFC GlobalId as part of object names.
-  window.highlightIfcSpace=(guid)=>{
-    root.traverse(o=>{if (!o.isMesh)return;
-      if(o.userData.originalMaterial){o.material=o.userData.originalMaterial;delete o.userData.originalMaterial}
-      if(o.name.includes(guid)){o.userData.originalMaterial=o.material;o.material=new THREE.MeshStandardMaterial({color:0xffa500,transparent:true,opacity:0.8,side:THREE.DoubleSide});}
-    });
-  };
-  const resize=()=>{const w=container.clientWidth,h=container.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};
-  new ResizeObserver(resize).observe(container);resize();
+  const gltf=await new GLTFLoader().loadAsync('./model.glb');const root=gltf.scene;scene.add(root);
+  const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+  if(!Number.isFinite(size.length())||size.length()<.01)throw Error('Invalid mesh bounds');
+  const meshes=[];const neutralMaterials=new Map();const edgeHelpers=[];
+  function materialFor(name){
+    let color=0xd9e4ed;
+    if(/IfcRoof|IfcCovering/.test(name))color=0x8dabbc;
+    else if(/IfcWindow/.test(name))color=0x91cbdc;
+    else if(/IfcDoor/.test(name))color=0xb5a58b;
+    else if(/IfcSlab/.test(name))color=0xbbcad5;
+    else if(/IfcSpace/.test(name))color=0x8acfc6;
+    return new THREE.MeshStandardMaterial({color,metalness:0,roughness:0.88,side:THREE.DoubleSide,flatShading:false});
+  }
+  root.traverse(o=>{if(!o.isMesh)return;meshes.push(o);const mat=materialFor(o.name||o.parent?.name||'');neutralMaterials.set(o,mat);o.material=mat;
+     if(o.geometry?.attributes?.normal===undefined)o.geometry.computeVertexNormals();
+     if(o.geometry?.index || o.geometry?.attributes?.position){const edges=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,30),new THREE.LineBasicMaterial({color:0x536777,transparent:true,opacity:.24}));o.add(edges);edgeHelpers.push(edges)}
+  });
+  function cameraDefault(){controls.target.copy(center);const r=Math.max(size.length(),1);camera.position.copy(center).add(new THREE.Vector3(r*.8,r*.6,r*.8));camera.near=.01;camera.far=Math.max(100,r*25);camera.updateProjectionMatrix();controls.update()}
+  cameraDefault();document.getElementById('resetCamera').onclick=cameraDefault;
+  const activeMaterial=new THREE.MeshStandardMaterial({color:0xffa72b,emissive:0x633200,emissiveIntensity:.3,side:THREE.DoubleSide,transparent:true,opacity:.9});
+  let chosenGuid='',isolate=false,activeMeshes=[];
+  function highlight(guid){chosenGuid=guid||'';activeMeshes=[];
+    meshes.forEach(o=>{const name=[o.name,o.parent?.name].join(' ');const active=!!guid&&name.includes(guid);if(active)activeMeshes.push(o);o.material=active?activeMaterial:neutralMaterials.get(o);o.visible=!isolate||active});
+    const x=document.getElementById('objectInfo');
+    if(isolate&&activeMeshes.length===0){x.textContent='This room has no displayable mesh in the current export. IFC metadata is still available below.'}
+    else if(activeMeshes.length){x.textContent=`Selected IFC space ${guid} · ${activeMeshes.length} mesh(es) found. Use Isolate selected room to see it without the walls.`}
+    else if(guid){x.textContent=`IFC space ${guid}: no room mesh found; it may be omitted by the geometry exporter. The room metadata remains verified.`}
+  }
+  window.highlightIfcSpace=highlight;
+  document.getElementById('isolateRoom').onclick=()=>{isolate=true;highlight(document.getElementById('spaceSelect').value)};
+  document.getElementById('showAll').onclick=()=>{isolate=false;highlight(chosenGuid)};
+  let edgesOn=true;document.getElementById('toggleEdges').onclick=e=>{edgesOn=!edgesOn;edgeHelpers.forEach(o=>o.visible=edgesOn);e.target.textContent=edgesOn?'Hide edges':'Show edges'};
+  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pressed;
+  renderer.domElement.addEventListener('pointerdown',e=>pressed={x:e.clientX,y:e.clientY});
+  renderer.domElement.addEventListener('pointerup',e=>{if(!pressed||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>6)return;
+    const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(meshes.filter(m=>m.visible),false);if(!hits.length)return;
+    const obj=hits[0].object;const n=[obj.name,obj.parent?.name].filter(Boolean).join(' | ');const match=n.match(/Ifc[A-Za-z0-9]+_([0-9A-Za-z_$]{22})_\d+/);
+    document.getElementById('objectInfo').textContent=`Clicked object: ${n}${match?' · IFC GlobalId: '+match[1]:''}`;
+    const target=ifcData?.spaces?.find(r=>n.includes(r.global_id));if(target){const select=document.getElementById('spaceSelect');select.value=target.global_id;showSpace(target.global_id);highlight(target.global_id)}
+  });
+  const resize=()=>{const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};new ResizeObserver(resize).observe(container);resize();
   renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
-  const active=document.getElementById('spaceSelect').value;if(active)window.highlightIfcSpace(active);
-} catch(e) {msg.textContent='3D mesh not available: '+e.message;status.textContent='Use the IFC and extracted room records meanwhile. This panel does not invent building geometry.';}
+  status.textContent=`Real IFC mesh loaded · ${meshes.length} meshes · bounding size ${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} m`;
+  if(document.getElementById('spaceSelect').value)highlight(document.getElementById('spaceSelect').value);
+} catch(e){msg.textContent='Unable to load 3D model: '+e.message;status.textContent='The IFC room metadata and maintenance simulation remain available.';}
 </script>
 </body></html>
