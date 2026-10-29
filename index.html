@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Haus QR / IFC maintenance demo</title><style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#18314b;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}header{background:#112f4d;color:white;padding:24px 5%}header small{letter-spacing:.12em;color:#a6c7df}header h1{margin:7px 0;font-size:30px}main{max-width:1050px;margin:24px auto;padding:0 18px}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}@media(max-width:700px){.grid{grid-template-columns:1fr}}.card{background:white;border:1px solid #dbe5ef;border-radius:15px;padding:23px;margin-bottom:17px;box-shadow:0 4px 24px #17416b0a}h2{font-size:20px;margin:0 0 15px}p{line-height:1.5}.muted{color:#65788b;font-size:14px}.id{font-family:Consolas,monospace;word-break:break-all;background:#eff4f8;padding:8px;border-radius:6px}button{border:0;background:#126e9d;color:white;padding:11px 13px;border-radius:8px;font-weight:600;cursor:pointer;margin:4px 5px 4px 0}button.red{background:#a14336}button.gray{background:#506578}input{padding:11px;border:1px solid #b5c8d8;border-radius:8px;width:100%;font-size:15px}span.tag{padding:5px 9px;border-radius:30px;background:#d7f0e5;color:#126144;font-weight:700;font-size:12px}.warn{background:#fff3df;color:#8d5a05}.timeline{padding-left:20px;border-left:3px solid #a9cce0;margin-left:6px}.evt{margin:0 0 16px;padding-left:12px}.evt strong{display:block}.note{background:#fff5d8;border-radius:10px;padding:12px;font-size:13px}.kv{border-bottom:1px solid #e3eaf0;padding:11px 0}.kv strong{display:block;font-size:13px;color:#66809b}.metric{font-size:26px;font-weight:800}.ok{color:#178059}.err{color:#bb5142}.floor{height:120px;background:linear-gradient(135deg,#f2f7fb,#ddeaf4);border-radius:10px;display:flex;align-items:center;justify-content:center}.floor div{border:3px solid #517c9e;padding:18px 50px;background:white;text-align:center}</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script></head><body>
+<header><small>COMPUTING IN CONSTRUCTION · THESIS CONCEPT · 29 OCT 2026</small><h1>Persistent QR ↔ IFC ↔ Maintenance History</h1><div>AC20-FZK-Haus.ifc · Ground floor / Bad (bathroom) · Working proof of concept</div></header>
+<main><div class="note"><b>Research demonstration:</b> Room and storey details load from a JSON extraction of the Haus IFC model. All equipment, replacement events and documents are <b>simulated test records</b>. The IFC extraction is real; maintenance records remain simulated. This is a static demonstration. No live database or real maintenance system is claimed.</div><br>
+<div class="grid"><section><div class="card"><h2>1. Scan / look up a permanent room ID</h2><p class="muted">The final QR code should contain this page URL with the room parameter:</p><p class="id" id="roomUrl">Loading page URL...</p><button class="gray" onclick="copyRoomUrl()">Copy URL for LightBurn</button><p class="muted" id="copyStatus"></p><input id="lookup" value="HOUSE-ROOM-BAD-001" aria-label="Enter room ID"><button onclick="lookup()">Resolve identifier</button><p id="lookupResult" class="muted"></p></div><div class="card"><h2>2. The stable IFC location</h2><div class="floor"><div><strong>HAUS</strong><br>GROUND FLOOR<br><b>BAD</b> · ROOM 3</div></div><div class="kv"><strong>IfcSpace name</strong>3 - Bad</div><div class="kv"><strong>IFC GlobalId (real model)</strong><span class="id">0e_hbkIQ5DMQlIJ$2V3j_m</span></div><div class="kv"><strong>Model</strong>AC20-FZK-Haus.ifc · IFC4</div><div class="kv"><strong>Persistent room ID</strong>HOUSE-ROOM-BAD-001</div><p class="muted">The room ID is independent of equipment IDs, so it survives replacement.</p></div></section>
+<section><div class="card"><h2>3. Current installed equipment</h2><span class="tag" id="status">CURRENT LINK VALID</span><p><span class="muted">Location:</span> Bathroom / Bad</p><div class="metric" id="equipment">VENT-001</div><p id="product">Simulated ventilation unit, version A</p><div class="kv"><strong>Installation / linked period</strong><span id="period">2026-01-15 - current</span></div><div class="kv"><strong>Document</strong><span id="doc">Demo technical manual A (mock record)</span></div><p><button onclick="replace()">Simulate replacement</button><button class="red" onclick="breakLink()">Inject invalid link</button><button class="gray" onclick="resetDemo()">Reset</button></p></div><div class="card"><h2>4. History and integrity audit</h2><div id="audit" class="ok"><b>PASS</b> · Exactly one current equipment link</div><h3>Maintenance events</h3><div class="timeline" id="timeline"></div></div></section></div>
+<section class="card" id="real3d"><h2>3D building model</h2><p class="muted">The original <a href="AC20-FZK-Haus.ifc" download>AC20-FZK-Haus.ifc</a> and verified room data are included in this project. The 3D viewer loads a <b>real mesh converted from that IFC file</b>, not an approximate house drawing.</p><div id="viewer3d" style="height:440px;background:#eaf1f7;border:1px solid #c8d8e5;border-radius:10px;position:relative;overflow:hidden"><div id="viewerMessage" style="padding:24px">Checking for converted IFC geometry…</div></div><p id="meshStatus" class="muted">The original IFC is available above.</p><p class="muted">Mouse: drag to rotate · scroll to zoom · right-drag to pan. If the .glb file is not uploaded yet, the original IFC and room metadata remain available.</p></section>
+<div class="card" id="ifcExplorer"><h2>Real IFC model data</h2><p class="muted">These room records were extracted from AC20-FZK-Haus.ifc. They are loaded from <code>ifc-data.json</code>, not typed into the HTML. Equipment remains simulated.</p><p><label for="spaceSelect"><b>Select a room from the IFC model</b></label></p><select id="spaceSelect" style="width:100%;padding:10px;border:1px solid #b5c8d8;border-radius:7px" aria-label="IFC room"></select><div id="spaceDetail" aria-live="polite"></div><p id="ifcLoad" class="muted">Loading model extraction...</p><details><summary>Model provenance</summary><p id="provenance" class="id"></p><p class="muted">The extracted JSON was produced from the actual IFC file. Model geometry is not displayed here, and the page does not parse an IFC file at scan time.</p></details></div>
+<div class="card"><h2>Research contribution to validate</h2><p><b>Hypothesis:</b> A persistent location identifier combined with time-bounded equipment assignments and integrity rules can preserve traceable maintenance history when an asset is replaced.</p><p><b>Measured outcomes:</b> correct resolution, preservation of retired history, detection of missing/contradictory assignments, and behavior after IFC re-export.</p><p class="muted">Prototype computes referential-integrity checks over in-memory records; replacement preserves historical events. Room and storey values now load from an extraction of the supplied IFC file. Direct IFC parsing in the browser, actual maintenance records and systematic test-set evaluation remain future thesis work.</p></div></main>
+<script>
+let ifcData=null;
+function showSpace(guid){
+ const r=ifcData?.spaces.find(x=>x.global_id===guid);if(!r)return;
+ const el=document.getElementById('spaceDetail');el.replaceChildren();
+ for(const [k,v] of [['IFC entity','IfcSpace #'+r.step_id],['Room number',r.number],['Room name',r.long_name],['GlobalId',r.global_id],['Storey',r.storey],['Storey GlobalId',r.storey_global_id]]){
+ const row=document.createElement('div');row.className='kv';const label=document.createElement('strong');label.textContent=k;row.append(label,document.createTextNode(String(v??'Not provided')));el.append(row);
+ }
+}
+async function loadIfc(){
+ try{const response=await fetch('ifc-data.json',{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);ifcData=await response.json();
+ const sel=document.getElementById('spaceSelect');for(const r of ifcData.spaces){const option=document.createElement('option');option.value=r.global_id;option.textContent=`${r.storey}: ${r.number} – ${r.long_name}`;sel.append(option)}
+ sel.value=ifcData.selected_room;sel.addEventListener('change',()=>{showSpace(sel.value);window.highlightIfcSpace?.(sel.value)});showSpace(sel.value);
+ document.getElementById('ifcLoad').textContent=`Loaded ${ifcData.spaces.length} actual IfcSpace entities from extracted model data.`;
+ document.getElementById('provenance').textContent=`${ifcData.source_file} | ${ifcData.schema} | SHA-256 ${ifcData.sha256}`;
+ const found=ifcData.spaces.find(x=>x.global_id===GUID);
+ if(!found || found.long_name!=='Bad')document.getElementById('ifcLoad').textContent='ERROR: expected Bad room not found in IFC extraction.';
+ }catch(e){document.getElementById('ifcLoad').textContent='Cannot load IFC extraction: '+e.message+' (open via GitHub Pages or a local HTTP server, not file://).'}
+}
+
+const ROOM='HOUSE-ROOM-BAD-001', GUID='0e_hbkIQ5DMQlIJ$2V3j_m';
+const original=()=>({room:{id:ROOM,ifcGuid:GUID},assets:{'VENT-001':{name:'Simulated ventilation unit A',document:'Test manual A'},'VENT-002':{name:'Simulated ventilation unit B',document:'Test manual B'}},assignments:[{asset:'VENT-001',from:'2026-01-15',to:null}],events:[{date:'2026-01-15',asset:'VENT-001',type:'installed'},{date:'2026-03-10',asset:'VENT-001',type:'inspected'}]});
+let db=original();
+function audit(){let errors=[];if(db.room.id!==ROOM||db.room.ifcGuid!==GUID)errors.push('Room identity differs from the registered IFC link');for(const a of db.assignments){if(!db.assets[a.asset])errors.push('Unknown equipment ID: '+a.asset);if(a.to!==null&&a.to<a.from)errors.push('Invalid assignment period: '+a.asset)}const current=db.assignments.filter(a=>a.to===null);if(current.length!==1)errors.push('Expected exactly one current assignment; found '+current.length);if(current.length===1&&!db.assets[current[0].asset])errors.push('Current equipment cannot be resolved');for(const e of db.events){if(!db.assets[e.asset])errors.push('Event linked to unknown equipment '+e.asset)}return {errors,current:current.length===1&&db.assets[current[0].asset]?current[0]:null}}
+function lookup(){let v=document.getElementById('lookup').value.trim();let ok=v===db.room.id&&db.room.ifcGuid===GUID;let result=document.getElementById('lookupResult');result.textContent=ok?'PASS: Registered room identifier resolves to the verified IFC IfcSpace.':'FAIL: No valid room/IFC link; unrelated records are not displayed.';result.className=ok?'ok':'err'}
+function replace(){let a=audit();if(a.errors.length){alert('Fix or reset the inconsistent records before replacement.');return}db.assignments.find(v=>v.to===null).to='2026-10-29';db.assignments.push({asset:'VENT-002',from:'2026-10-29',to:null});db.events.push({date:'2026-10-29',asset:'VENT-001',type:'removed'},{date:'2026-10-29',asset:'VENT-002',type:'installed'});render()}
+function breakLink(){let active=db.assignments.find(a=>a.to===null);if(active)active.asset='MISSING-999';render()}
+function resetDemo(){db=original();render();lookup()}
+function render(){let result=audit(),current=result.current,asset=current?db.assets[current.asset]:null;document.getElementById('equipment').textContent=asset?current.asset:'UNRESOLVED';document.getElementById('product').textContent=asset?asset.name:'Equipment assignment cannot be resolved safely';document.getElementById('period').textContent=current?current.from+' - current':'Not available';document.getElementById('doc').textContent=asset?asset.document+' (simulated)':'Document link unavailable';document.getElementById('status').textContent=result.errors.length?'INTEGRITY FAILURE':'CURRENT LINK VALID';document.getElementById('status').className=result.errors.length?'tag warn':'tag';let auditBox=document.getElementById('audit');auditBox.textContent=result.errors.length?'FAIL: '+result.errors.join('; '):'PASS: one current assignment; all asset references valid; IFC location unchanged';auditBox.className=result.errors.length?'err':'ok';let timeline=document.getElementById('timeline');timeline.replaceChildren();for(let e of db.events){let box=document.createElement('div');box.className='evt';let date=document.createElement('strong');date.textContent=e.date;box.append(date,document.createTextNode(e.asset+' '+e.type+' (simulated)'));timeline.append(box)}}
+function roomUrl(){const u=new URL(window.location.href);u.search='';u.hash='';u.searchParams.set('room',ROOM);return u.href}
+async function copyRoomUrl(){const value=roomUrl();try{await navigator.clipboard.writeText(value);document.getElementById('copyStatus').textContent='Link copied. Paste this full URL into the LightBurn QR generator.'}catch(e){document.getElementById('copyStatus').textContent='Select and copy the full URL above.'}}
+(function start(){document.getElementById('roomUrl').textContent=roomUrl();const requested=new URLSearchParams(window.location.search).get('room');if(requested!==null){document.getElementById('lookup').value=requested}render();lookup();loadIfc()})();
+</script>
+<script type="module">
+const status=document.getElementById('meshStatus');
+const msg=document.getElementById('viewerMessage');
+// An upload of the model.glb generated by convert_ifc_to_glb.py is required.
+try {
+  const res=await fetch('./model.glb',{method:'HEAD',cache:'no-store'});
+  if (!res.ok || !/model\/gltf-binary|application\/octet-stream/i.test(res.headers.get('content-type')||'application/octet-stream')) {
+    throw new Error('model.glb is not published yet. Run the included conversion script on your PC and upload the result.');
+  }
+  const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js');
+  const [{GLTFLoader},{OrbitControls}]=await Promise.all([
+    import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js'),
+    import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js')
+  ]);
+  const container=document.getElementById('viewer3d');
+  msg.remove();
+  const scene=new THREE.Scene();scene.background=new THREE.Color('#eaf1f7');
+  const camera=new THREE.PerspectiveCamera(48,1,0.01,5000);camera.position.set(20,15,20);
+  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x728aa2,2.3));
+  const sunlight=new THREE.DirectionalLight(0xffffff,2.4);sunlight.position.set(20,40,30);scene.add(sunlight);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;
+  let root;
+  const gltf=await new GLTFLoader().loadAsync('./model.glb');root=gltf.scene;scene.add(root);
+  const bounds=new THREE.Box3().setFromObject(root),size=new THREE.Vector3(),center=new THREE.Vector3();
+  bounds.getSize(size);bounds.getCenter(center);
+  if (!Number.isFinite(size.length()) || size.length()<0.01) throw new Error('Converted mesh has invalid geometry.');
+  controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(size.length()*.7,size.length()*.55,size.length()*.7));camera.near=Math.max(.001,size.length()/10000);camera.far=Math.max(100,size.length()*30);camera.updateProjectionMatrix();controls.update();
+  status.textContent=`Real IFC mesh loaded · ${gltf.scene.children.length} root nodes · bounding size ${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} m`;
+  // The exported model retains IFC GlobalId as part of object names.
+  window.highlightIfcSpace=(guid)=>{
+    root.traverse(o=>{if (!o.isMesh)return;
+      if(o.userData.originalMaterial){o.material=o.userData.originalMaterial;delete o.userData.originalMaterial}
+      if(o.name.includes(guid)){o.userData.originalMaterial=o.material;o.material=new THREE.MeshStandardMaterial({color:0xffa500,transparent:true,opacity:0.8,side:THREE.DoubleSide});}
+    });
+  };
+  const resize=()=>{const w=container.clientWidth,h=container.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};
+  new ResizeObserver(resize).observe(container);resize();
+  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+  const active=document.getElementById('spaceSelect').value;if(active)window.highlightIfcSpace(active);
+} catch(e) {msg.textContent='3D mesh not available: '+e.message;status.textContent='Use the IFC and extracted room records meanwhile. This panel does not invent building geometry.';}
+</script>
+</body></html>
