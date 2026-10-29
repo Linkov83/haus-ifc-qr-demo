@@ -1,11 +1,9 @@
-# IFC-Based Maintenance Information – QR Code Prototype
+# IFC-Based Maintenance Information – QR Prototype
 
-Preliminary Master's thesis work in Computing in Construction, Metropolia University of Applied Sciences.
+Preliminary Master's thesis project in Computing in Construction at Metropolia University of Applied Sciences.
 
-The demonstration connects a permanent room identifier to IFC spatial information and simulated maintenance records. The selected bathroom is a real `IfcSpace` from `AC20-FZK-Haus.ifc`.
+The website connects a permanent room identifier to IFC room records and simulated maintenance events. The spatial viewer plots seven **real IFC space placement origins** from `AC20-FZK-Haus.ifc`; these are not room boundaries or an IFC building mesh.
 
-The site loads extracted IFC room and storey data from `ifc-data.json`. The maintenance equipment, documents and events are sample data created for testing replacement and link-validation scenarios.
+The geometry visualization is not complete. The prototype currently uses an extracted JSON file; it does not parse IFC in the browser. Equipment, events and documents are simulated. The next research phase will investigate IFC geometry, version changes and persistent links.
 
-This is not a live facility management system. A next research step is to develop a reproducible IFC import and version-validation process and test the method on additional cases.
-
-**Author:** Lyubomir Linkov
+Lyubomir Linkov

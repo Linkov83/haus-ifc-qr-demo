@@ -12,7 +12,12 @@
       "type": "IfcSpace",
       "storey": "Dachgeschoss",
       "storey_global_id": "273g3wqLzDtfYIl7qqkgcO",
-      "storey_step_id": 35065
+      "storey_step_id": 35065,
+      "placement_origin_m": [
+        11.7,
+        9.7,
+        2.7
+      ]
     },
     {
       "step_id": 34191,
@@ -22,7 +27,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        0.3,
+        4.25,
+        0.0
+      ]
     },
     {
       "step_id": 21640,
@@ -32,7 +42,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        0.3,
+        9.7,
+        0.0
+      ]
     },
     {
       "step_id": 21283,
@@ -42,7 +57,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        4.04,
+        9.7,
+        0.0
+      ]
     },
     {
       "step_id": 20909,
@@ -52,7 +72,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        7.65,
+        9.7,
+        0.0
+      ]
     },
     {
       "step_id": 33774,
@@ -62,7 +87,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        11.7,
+        0.3,
+        0.0
+      ]
     },
     {
       "step_id": 34763,
@@ -72,7 +102,12 @@
       "type": "IfcSpace",
       "storey": "Erdgeschoss",
       "storey_global_id": "2eyxpyOx95m90jmsXLOuR0",
-      "storey_step_id": 479
+      "storey_step_id": 479,
+      "placement_origin_m": [
+        0.3,
+        4.01,
+        0.0
+      ]
     }
   ],
   "storeys": [
