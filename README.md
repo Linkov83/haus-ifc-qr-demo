@@ -1,20 +1,11 @@
 # IFC-Based Maintenance Information – QR Code Prototype
 
-This project is part of my preliminary research for a Master's thesis in Computing in Construction at Metropolia University of Applied Sciences.
+Preliminary Master's thesis work in Computing in Construction, Metropolia University of Applied Sciences.
 
-The aim is to investigate how a permanent QR identifier can connect a physical location in a building with its IFC model, equipment information, and maintenance history.
+The demonstration connects a permanent room identifier to IFC spatial information and simulated maintenance records. The selected bathroom is a real `IfcSpace` from `AC20-FZK-Haus.ifc`.
 
-## Demonstration
+The site loads extracted IFC room and storey data from `ifc-data.json`. The maintenance equipment, documents and events are sample data created for testing replacement and link-validation scenarios.
 
-The prototype uses the AC20-FZK-Haus.ifc building model. A bathroom (Bad) is selected as an example, using its actual IFC GlobalId.
+This is not a live facility management system. A next research step is to develop a reproducible IFC import and version-validation process and test the method on additional cases.
 
-The demonstration shows how equipment can be replaced while keeping its maintenance history linked to the same location. It also includes a simple check for incorrect data links.
-
-The equipment and maintenance records are simulated for this demonstration.
-
-## Research Focus
-
-The main research question is how to maintain reliable links between building model data and maintenance records when equipment changes over time.
-
-The current version is a small demonstration. Further work will focus on IFC data integration, persistent records, and testing the reliability of the proposed method.
-
+**Author:** Lyubomir Linkov
