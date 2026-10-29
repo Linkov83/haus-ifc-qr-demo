@@ -1,20 +1,20 @@
-# Haus QR / IFC research prototype
+# IFC-Based Maintenance Information – QR Code Prototype
 
-Static HTML research demo using the `AC20-FZK-Haus.ifc` room **Bad** and IFC GlobalId `0e_hbkIQ5DMQlIJ$2V3j_m`. Equipment and maintenance history are simulated. There is no server/database or real-time model parsing.
+This project is part of my preliminary research for a Master's thesis in Computing in Construction at Metropolia University of Applied Sciences.
 
-## Publish to GitHub Pages
-
-1. Create a new **public** GitHub repository, for example `haus-ifc-qr-demo`.
-2. Upload **index.html** and **.nojekyll** into its root and commit.
-3. Go to **Settings → Pages**. Set **Deploy from a branch**, branch **main**, folder **/(root)**, and save.
-4. Open the published address shown in GitHub Pages settings and verify it works on mobile.
-5. Your LightBurn QR payload must be the **exact verified URL** followed by `?room=HOUSE-ROOM-BAD-001` (unless the page URL already has a `?`). The deployed page itself shows/copies the correct full QR URL.
-6. Test the QR from a phone on a different network before making the final metal plaque.
-
-If your GitHub account name is `USERNAME`, and repository is `haus-ifc-qr-demo`, the typical URL format is `https://USERNAME.github.io/haus-ifc-qr-demo/?room=HOUSE-ROOM-BAD-001`. This is a pattern, **not a verified deployment address**.
+The aim is to investigate how a permanent QR identifier can connect a physical location in a building with its IFC model, equipment information, and maintenance history.
 
 ## Demonstration
 
-Scan your metal QR label → open the website → room resolves to IFC model ID → click **Simulate replacement** to preserve the retired equipment's events → click **Inject invalid link** to see the integrity check fail → **Reset**. Refresh resets the simulated state.
+The prototype uses the AC20-FZK-Haus.ifc building model. A bathroom (Bad) is selected as an example, using its actual IFC GlobalId.
 
-**Research limitation:** The prototype's IFC link is pre-extracted and embedded, and its integrity checks use browser memory; future research will integrate IFC parsing, persistent data, model versioning and reproducible testing.
+The demonstration shows how equipment can be replaced while keeping its maintenance history linked to the same location. It also includes a simple check for incorrect data links.
+
+The equipment and maintenance records are simulated for this demonstration.
+
+## Research Focus
+
+The main research question is how to maintain reliable links between building model data and maintenance records when equipment changes over time.
+
+The current version is a small demonstration. Further work will focus on IFC data integration, persistent records, and testing the reliability of the proposed method.
+
